@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--
+  Research Report Builder
+  Copyright (c) 2026 G. Michael Rapp. MIT License; see LICENSE.
+
+  Contains Paged.js (c) Coko Foundation, MIT License; the OSINT Citation Generator core,
+  MIT License; and IBM Plex fonts (c) IBM Corp., SIL Open Font License 1.1. See NOTICE.md.
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Gather a topic's research into one branded report: bottom line and depth rating, key considerations, the research itself, debates and open questions, actors, timeline, terms, and graded sources. Saves as a PDF. Runs entirely in your browser.">
+<title>Research Report Builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%2315181B'/%3E%3Crect x='7' y='7' width='18' height='3' fill='%231F5FAD'/%3E%3Crect x='7' y='13' width='18' height='2' fill='%23F4F5F2'/%3E%3Crect x='7' y='18' width='18' height='2' fill='%23F4F5F2'/%3E%3Crect x='7' y='23' width='5' height='3' fill='%231F5FAD'/%3E%3Crect x='14' y='23' width='5' height='3' fill='%231F5FAD'/%3E%3Crect x='21' y='23' width='4' height='3' fill='%23F4F5F2'/%3E%3C/svg%3E">
+<style id="fonts">
+/*FONTS*/
+</style>
+<style>
+:root {
+  --bg: #E9EBE7; --surface: #FFFFFF; --ink: #15181B; --muted: #565C61; --line: #CDD1CB; --soft: #F4F5F2;
+  --accent: #1F5FAD; --accent-ink: #FFFFFF; --accent-soft: #DFE9F6; --ok: #2A6637; --fix: #9E2219; --fix-bg: #FBE3E0; --check: #6F4B00; --check-bg: #FBEDC4; --note: #35566B; --note-bg: #E3EDF3;
+  --ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; --mono: 'Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #101213; --surface: #1A1D1F; --ink: #E6E8E4; --muted: #9CA3A7; --line: #30363A; --soft: #23272A; --accent: #8DB8EE; --accent-ink: #08142A; --accent-soft: #1B2A3E; --ok: #8FD19E; --fix: #FFA79C; --fix-bg: #3F1D1A; --check: #F2CD6B; --check-bg: #3A2E10; --note: #A9C9DB; --note-bg: #1C323E; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #101213; --surface: #1A1D1F; --ink: #E6E8E4; --muted: #9CA3A7; --line: #30363A; --soft: #23272A; --accent: #8DB8EE; --accent-ink: #08142A; --accent-soft: #1B2A3E; --ok: #8FD19E; --fix: #FFA79C; --fix-bg: #3F1D1A; --check: #F2CD6B; --check-bg: #3A2E10; --note: #A9C9DB; --note-bg: #1C323E; color-scheme: dark; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--ui); font-size: 14px; line-height: 1.45; }
+[hidden] { display: none !important; }
+#app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+#app .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+#app .bar h1 { margin: 0 8px 0 0; font-size: 16px; font-weight: 650; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+#app .bar h1 .mk { width: 18px; height: 6px; background: var(--accent); display: inline-block; }
+#app .bar .ver { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--muted); }
+#app .bar .grow { flex: 1 1 auto; }
+#app .btn { font: inherit; font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; white-space: nowrap; }
+#app .btn:hover { border-color: var(--ink); }
+#app .btn:disabled { opacity: 0.5; cursor: default; }
+#app .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+#app .btn.small { font-size: 12px; padding: 3px 8px; }
+#app .btn.quiet { background: transparent; border-color: transparent; color: var(--accent); padding-inline: 6px; }
+#app .btn.danger { color: var(--fix); }
+#app .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+#app .seg label { position: relative; font-size: 12px; }
+#app .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+#app .seg span { display: block; padding: 3px 9px; }
+#app .seg input:checked + span { background: var(--soft); font-weight: 600; }
+#app .seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#app .main { min-height: 0; display: grid; grid-template-columns: minmax(400px, 580px) minmax(0, 1fr); }
+#app .editor { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--surface); border-right: 1px solid var(--line); }
+#app .tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+#app .tabs button { font: inherit; font-size: 13px; padding: 7px 11px; border: 1px solid transparent; border-bottom: 0; border-radius: 5px 5px 0 0; background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; }
+#app .tabs button[aria-selected="true"] { background: var(--soft); border-color: var(--line); color: var(--ink); font-weight: 600; margin-bottom: -1px; border-bottom: 1px solid var(--soft); }
+#app .panes { min-height: 0; overflow: auto; background: var(--soft); }
+#app .pane { padding: 16px 18px 40px; display: flex; flex-direction: column; gap: 14px; }
+#app .pane h2 { margin: 4px 0 0; font-size: 13px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+#app .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+#app .field > label, #app .field .label { font-size: 12.5px; font-weight: 600; }
+#app .hint { margin: 0; font-size: 12px; color: var(--muted); }
+#app .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+#app input[type="text"], #app input[type="url"], #app textarea, #app select { font: inherit; font-size: 13.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 7px 9px; width: 100%; min-width: 0; box-sizing: border-box; }
+#app textarea { resize: vertical; line-height: 1.5; }
+#app textarea.code { font-family: var(--mono); font-size: 12.5px; line-height: 1.6; tab-size: 2; }
+#app textarea.big { min-height: 420px; }
+#app input[type="color"] { width: 44px; height: 30px; padding: 0 2px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+#app .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; }
+#app .check input { margin-top: 2px; }
+#app .toolbar { display: flex; flex-wrap: wrap; gap: 4px; position: sticky; top: 0; z-index: 2; padding: 6px 0; background: var(--soft); }
+#app .toolbar .btn { font-size: 12px; padding: 3px 8px; }
+#app details.help { border: 1px solid var(--line); border-radius: 5px; background: var(--surface); padding: 8px 12px; font-size: 12.5px; }
+#app details.help summary { cursor: pointer; font-weight: 600; }
+#app details.help table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+#app details.help td { padding: 4px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+#app details.help td:first-child { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+#app .card { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+#app .card .top { display: flex; align-items: center; gap: 8px; }
+#app .card .top .k { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+#app .card .top .grow { flex: 1; }
+#app .srcs { display: flex; flex-direction: column; gap: 8px; }
+#app .src { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); padding: 8px 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: start; }
+#app .src .key { font-family: var(--mono); font-size: 12.5px; width: 100%; padding: 3px 6px; }
+#app .src .txt { grid-column: 1 / -1; font-family: 'Plex Serif', Georgia, serif; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+#app .src .acts { display: flex; gap: 4px; }
+#app .filemsg { font-size: 12.5px; color: var(--ok); margin: 0; } .filemsg.bad { color: var(--fix); } .filemsg:empty { display: none; }
+#app .view { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+#app .viewbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--bg); font-size: 12.5px; color: var(--muted); }
+#app .viewbar .stat b { color: var(--ink); font-weight: 600; }
+#app .viewbar .busy { color: var(--accent); }
+#app .checks { margin: 0; padding: 0 16px; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+#app .checks li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 12.5px; color: var(--ink); }
+#app .checks li button { font: inherit; border: 0; background: none; padding: 0; text-align: left; color: inherit; cursor: pointer; }
+#app .checks li button:hover { text-decoration: underline; }
+#app .tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 0; border-radius: 3px; text-align: center; margin-top: 1px; }
+#app .tag.fix { background: var(--fix-bg); color: var(--fix); } .tag.check { background: var(--check-bg); color: var(--check); } .tag.note { background: var(--note-bg); color: var(--note); }
+#app .checkwrap { padding: 8px 0 10px; border-bottom: 1px solid var(--line); background: var(--bg); max-height: 160px; overflow: auto; }
+#app .checkwrap:empty { display: none; }
+#app .scroller { min-height: 0; overflow: auto; padding: 20px 0 60px; }
+#pages { margin: 0 auto; }
+#pages .pagedjs_pages { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+#pages .pagedjs_page { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 6px 24px rgba(0, 0, 0, 0.08); }
+#stage { position: absolute; left: -20000px; top: 0; width: 900px; visibility: hidden; }
+#app .empty-view { margin: 40px auto; max-width: 420px; text-align: center; color: var(--muted); }
+#app .status { min-height: 1.4em; font-size: 12.5px; color: var(--ok); }
+#app .status.bad { color: var(--fix); }
+@media (max-width: 900px) {
+  #app { height: auto; }
+  #app .main { grid-template-columns: minmax(0, 1fr); }
+  #app .editor { border-right: 0; }
+  #app .panes { overflow: visible; }
+  #app .scroller { overflow-x: auto; }
+}
+@media print {
+  html, body { height: auto; background: none; }
+  #app { display: block; height: auto; }
+  #app .bar, #app .editor, #app .viewbar, #app .checkwrap, #stage, #app .empty-view { display: none !important; }
+  #app .main, #app .view { display: block; }
+  #app .scroller { overflow: visible; padding: 0; }
+  #pages { zoom: 1 !important; width: auto !important; }
+  #pages .pagedjs_pages { display: block; }
+  #pages .pagedjs_page { box-shadow: none; }
+}
+#app .parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 14px; }
+#app .logo-prev { max-height: 44px; max-width: 160px; object-fit: contain; border: 1px solid var(--line); background: #FFFFFF; padding: 3px; border-radius: 3px; }
+#app .src .meta { grid-column: 1 / -1; display: grid; grid-template-columns: 150px 90px minmax(0, 1fr); gap: 6px; align-items: start; }
+#app .src .meta select, #app .src .meta input { font-size: 12.5px; padding: 4px 6px; }
+#app .src .meta textarea { font-size: 12.5px; padding: 4px 6px; min-height: 30px; }
+#app .src .grp { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+#app .example { margin: 0; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 4px; font-family: var(--mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; color: var(--muted); background: var(--surface); }
+</style>
+<script>
+(function () { try { var t = JSON.parse(localStorage.getItem('rrb-theme-v1')); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {} })();
+</script>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <h1><span class="mk"></span>Research Report Builder <span class="ver">v1.0</span></h1>
+    <button type="button" class="btn primary" id="printBtn">Print or save as PDF</button>
+    <button type="button" class="btn" id="saveBtn">Save project</button>
+    <button type="button" class="btn" id="openBtn">Open project</button>
+    <button type="button" class="btn quiet" id="newBtn">New report</button>
+    <input type="file" id="openPick" accept=".json,application/json" hidden>
+    <span class="status" id="status" role="status"></span>
+    <span class="grow"></span>
+    <span class="seg" role="radiogroup" aria-label="Editor theme">
+      <label><input type="radio" name="theme" id="themeAuto" value="auto" checked><span>Auto</span></label>
+      <label><input type="radio" name="theme" id="themeLight" value="light"><span>Light</span></label>
+      <label><input type="radio" name="theme" id="themeDark" value="dark"><span>Dark</span></label>
+    </span>
+  </header>
+
+  <div class="main">
+    <section class="editor" aria-label="Editor">
+      <div class="tabs" role="tablist" id="tabs">
+        <button type="button" role="tab" data-tab="report" aria-selected="true">Report</button>
+        <button type="button" role="tab" data-tab="brand" aria-selected="false">Brand</button>
+        <button type="button" role="tab" data-tab="bottom" aria-selected="false">Bottom line</button>
+        <button type="button" role="tab" data-tab="considerations" aria-selected="false">Considerations</button>
+        <button type="button" role="tab" data-tab="body" aria-selected="false">Research</button>
+        <button type="button" role="tab" data-tab="debates" aria-selected="false">Debates</button>
+        <button type="button" role="tab" data-tab="context" aria-selected="false">Reference</button>
+        <button type="button" role="tab" data-tab="visuals" aria-selected="false">Visuals</button>
+        <button type="button" role="tab" data-tab="sources" aria-selected="false">Sources</button>
+        <button type="button" role="tab" data-tab="appendix" aria-selected="false">Appendix</button>
+        <button type="button" role="tab" data-tab="back" aria-selected="false">About</button>
+      </div>
+      <div class="panes" id="panes">
+
+        <div class="pane" data-pane="report">
+          <h2>Cover</h2>
+          <div class="field"><label for="m-title">Title</label><input type="text" id="m-title" data-k="meta.title" placeholder="The topic, in ten words or fewer"></div>
+          <div class="field"><label for="m-question">The question this report answers</label><textarea id="m-question" data-k="meta.question" rows="2" placeholder="What does the reader need to know about this topic, and is it worth covering?"></textarea></div>
+          <div class="row">
+            <div class="field"><label for="m-preparedFor">Prepared for</label><input type="text" id="m-preparedFor" data-k="meta.preparedFor" placeholder="Name, title"></div>
+            <div class="field"><label for="m-preparedBy">Prepared by</label><input type="text" id="m-preparedBy" data-k="meta.preparedBy" placeholder="G. Michael Rapp"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="m-date">Date</label><input type="text" id="m-date" data-k="meta.date" placeholder="October 2026"></div>
+            <div class="field"><label for="m-number">Report number</label><input type="text" id="m-number" data-k="meta.number" placeholder="001"></div>
+            <div class="field"><label for="m-version">Version</label><input type="text" id="m-version" data-k="meta.version" placeholder="1.0"></div>
+            <div class="field"><label for="m-status">Status</label><select id="m-status" data-k="meta.status"><option>Draft</option><option>Working draft</option><option>For review</option><option>Final</option><option value="">(none)</option></select></div>
+          </div>
+          <div class="field"><label for="m-shortTitle">Short title, for the page footers</label><input type="text" id="m-shortTitle" data-k="meta.shortTitle" placeholder="Leave blank to use the title"></div>
+          <div class="field"><span class="label">Cover image</span>
+            <div class="row" style="grid-template-columns:auto auto 1fr;align-items:center"><button type="button" class="btn small" id="coverPick">Choose an image</button><button type="button" class="btn small quiet" id="coverClear">Remove</button><span class="hint" id="coverInfo"></span></div>
+            <input type="file" id="coverFile" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" hidden>
+            <input type="text" id="m-coverCaption" data-k="meta.coverCaption" placeholder="Caption or credit for the cover image">
+            <p class="hint">A map or photo, about 7 × 1.4 inches. Optional.</p></div>
+          <h2>Parts of the report</h2>
+          <p class="hint">Turn off any part you do not need. A part that is on but empty is left out.</p>
+          <div class="parts">
+            <label class="check"><input type="checkbox" data-k="meta.parts.bottom"> <span>Bottom line and depth rating</span></label>
+            <label class="check"><input type="checkbox" data-k="meta.parts.considerations"> <span>Key considerations</span></label>
+            <label class="check"><input type="checkbox" checked disabled> <span>The research (always)</span></label>
+            <label class="check"><input type="checkbox" data-k="meta.parts.debates"> <span>Debates and open questions</span></label>
+            <label class="check"><input type="checkbox" data-k="meta.parts.context"> <span>Reference: actors, timeline, terms</span></label>
+            <label class="check"><input type="checkbox" data-k="meta.parts.sources"> <span>Source assessment</span></label>
+            <label class="check"><input type="checkbox" data-k="meta.parts.back"> <span>"About this report" page</span></label>
+          </div>
+          <label class="check"><input type="checkbox" id="m-sectionBreaks" data-k="meta.sectionBreaks"> <span>Start each numbered research section on a new page</span></label>
+          <p class="hint">You can open a White Paper Builder project with Open project: its title, summary, body, visuals, appendix, and sources come across.</p>
+        </div>
+
+        <div class="pane" data-pane="brand" hidden>
+          <p class="hint">The brand stays in this browser when you start a new report. Save it to a file to use it on another computer or to keep more than one.</p>
+          <div class="row" style="grid-template-columns:auto auto 1fr;align-items:center"><button type="button" class="btn small" id="brandSave">Save brand</button><button type="button" class="btn small" id="brandOpen">Open brand</button><span></span></div>
+          <input type="file" id="brandPick" accept=".json,application/json" hidden>
+          <h2>Identity</h2>
+          <div class="row">
+            <div class="field"><label for="br-org">Organization</label><input type="text" id="br-org" data-k="brand.org" placeholder="Organization or outlet"></div>
+            <div class="field"><label for="br-tagline">Tagline or unit</label><input type="text" id="br-tagline" data-k="brand.tagline" placeholder="Research desk"></div>
+          </div>
+          <div class="field"><span class="label">Logo</span>
+            <div class="row" style="grid-template-columns:auto auto auto 1fr;align-items:center"><button type="button" class="btn small" id="logoPick">Choose a logo</button><button type="button" class="btn small quiet" id="logoClear">Remove</button><img class="logo-prev" id="logoPrev" alt="" hidden><span class="hint" id="logoInfo"></span></div>
+            <input type="file" id="logoFile" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" hidden>
+            <p class="hint">PNG or SVG with a transparent background works best. Shown on the cover and the last page.</p></div>
+          <div class="row">
+            <div class="field"><label for="br-label">Report name on the cover</label><input type="text" id="br-label" data-k="brand.label" placeholder="Research Report"></div>
+            <div class="field"><label for="br-prefix">Number prefix</label><input type="text" id="br-prefix" data-k="brand.prefix" placeholder="RR"></div>
+          </div>
+          <div class="field"><label for="br-marking">Handling marking, on the cover and every page</label><input type="text" id="br-marking" data-k="brand.marking" placeholder="Internal: for editorial use"></div>
+          <h2>Look</h2>
+          <div class="row" style="align-items:end">
+            <div class="field"><label for="br-accent">Accent color</label><input type="color" id="br-accent" data-k="brand.accent"></div>
+            <div class="field"><label for="br-ink">Ink color, for headings and rules</label><input type="color" id="br-ink" data-k="brand.ink"></div>
+            <div class="field"><label for="br-paper">Page color</label><select id="br-paper" data-k="brand.paper"><option value="tinted">Off-white</option><option value="white">White, saves ink</option></select></div>
+          </div>
+          <h2>Last page</h2>
+          <div class="row">
+            <div class="field"><label for="br-site">Website</label><input type="text" id="br-site" data-k="brand.site" placeholder="example.org"></div>
+            <div class="field"><label for="br-contact">Contact</label><input type="text" id="br-contact" data-k="brand.contact" placeholder="research@example.org"></div>
+          </div>
+          <div class="field"><label for="br-disclaimer">Disclaimer</label><textarea id="br-disclaimer" data-k="brand.disclaimer" rows="2" placeholder="This report summarizes open-source research for internal planning. It is not legal advice."></textarea></div>
+          <div class="field"><label for="br-license">Rights line</label><input type="text" id="br-license" data-k="brand.license" placeholder="© 2026 Organization. Internal use only."></div>
+        </div>
+
+        <div class="pane" data-pane="bottom" hidden>
+          <p class="hint">One page for a reader who will read nothing else. About 350 words in all. Notes and citations work here too.</p>
+          <div class="field"><label for="b-bluf">Bottom line up front</label><textarea id="b-bluf" data-k="bottom.bluf" class="code" rows="5" data-cite></textarea><p class="hint">What the topic is, why it matters now, and the one thing to know. A blank line starts a new paragraph.</p></div>
+          <h2>Depth</h2>
+          <div class="row" style="grid-template-columns:200px 1fr">
+            <div class="field"><label for="b-depth">How deep it runs</label><select id="b-depth" data-k="bottom.depth"><option value="">Not rated</option><option value="1">1 Light</option><option value="2">2 Moderate</option><option value="3">3 Substantial</option><option value="4">4 Deep</option><option value="5">5 Very deep</option></select></div>
+            <div class="field"><label for="b-depthNote">Why that rating (optional)</label><input type="text" id="b-depthNote" data-k="bottom.depthNote" data-cite placeholder="Leave blank for the scale's own description"></div>
+          </div>
+          <p class="hint" id="depthHint"></p>
+          <div class="field"><label for="b-dims">What makes it deep, one per line: dimension | Low, Moderate, or High | note</label><textarea id="b-dims" data-k="bottom.dimensions" class="code" rows="5" data-cite></textarea></div>
+          <h2>Treatment and confidence</h2>
+          <div class="field"><label for="b-treatment">Recommended treatment</label><input type="text" id="b-treatment" data-k="bottom.treatment" data-cite placeholder="One long-form video, 25 minutes, with a follow-up short"></div>
+          <div class="field"><label for="b-effort">Research basis</label><input type="text" id="b-effort" data-k="bottom.effort" data-cite placeholder="Twelve hours over five days."><p class="hint">The number of sources and how many are rated A or B is added for you.</p></div>
+          <div class="row" style="grid-template-columns:160px 1fr">
+            <div class="field"><label for="b-confidence">Overall confidence</label><select id="b-confidence" data-k="bottom.confidence"><option value="">Not stated</option><option>High</option><option>Moderate</option><option>Low</option></select></div>
+            <div class="field"><label for="b-confNote">Why (optional)</label><input type="text" id="b-confNote" data-k="bottom.confidenceNote" data-cite placeholder="Leave blank for the standard wording"></div>
+          </div>
+          <h2>Takeaways and decisions</h2>
+          <div class="field"><label for="b-takeaways">Key takeaways, one per line</label><textarea id="b-takeaways" data-k="bottom.takeaways" class="code" rows="5" data-cite></textarea><p class="hint">Three to five. End a line with | High, | Moderate, or | Low to show your confidence in it.</p></div>
+          <div class="field"><label for="b-decisions">For your decision, one per line</label><textarea id="b-decisions" data-k="bottom.decisions" class="code" rows="3" data-cite></textarea><p class="hint">What you need the reader to decide or answer. Numbered D1, D2.</p></div>
+        </div>
+
+        <div class="pane" data-pane="considerations" hidden>
+          <p class="hint">What the reader must keep in mind: sensitivities, legal or safety risks, places where accuracy is easy to lose, audience expectations, timing.</p>
+          <div class="field"><label for="c-intro">Opening (optional)</label><textarea id="c-intro" data-k="considerations.intro" class="code" rows="3" data-cite></textarea></div>
+          <div class="field"><label for="c-items">Considerations, one per line: label | what to keep in mind</label><textarea id="c-items" data-k="considerations.items" class="code" rows="8" data-cite></textarea><p class="hint">The label prints in the margin: Sensitivity, Legal, Accuracy, Audience, Timing, or your own.</p></div>
+          <div class="field"><label for="c-myths">Common misconceptions, one per line: what is often said | what the research shows</label><textarea id="c-myths" data-k="considerations.misconceptions" class="code" rows="5" data-cite></textarea></div>
+        </div>
+
+        <div class="pane" data-pane="body" hidden>
+          <div class="toolbar" data-for="body"></div>
+          <textarea id="t-body" data-k="body" class="code big" spellcheck="true" data-cite aria-label="Research text"></textarea>
+          <details class="help" open><summary>How to write the research</summary><table id="helpTable"></table></details>
+        </div>
+
+        <div class="pane" data-pane="debates" hidden>
+          <p class="hint">Where accounts, experts, or sources disagree, and what is still unknown.</p>
+          <div class="field"><label for="d-intro">Opening (optional)</label><textarea id="d-intro" data-k="debates.intro" class="code" rows="3" data-cite></textarea></div>
+          <div class="field"><label for="d-items">Debates</label><textarea id="d-items" data-k="debates.items" class="code" rows="10" data-cite></textarea></div>
+          <pre class="example">? The question people disagree on
++ One view: who holds it, and their best evidence.
++ Another view: who holds it, and their best evidence.
+= Where the evidence points, and how sure you are.</pre>
+          <div class="field"><label for="d-gaps">Open questions, one per line: question | what would settle it</label><textarea id="d-gaps" data-k="debates.gaps" class="code" rows="5" data-cite></textarea></div>
+        </div>
+
+        <div class="pane" data-pane="context" hidden>
+          <p class="hint">Reference material the reader can look things up in.</p>
+          <div class="field"><label for="x-actors">Key actors, one per line: who | what they are | why they matter</label><textarea id="x-actors" data-k="context.actors" class="code" rows="6" data-cite></textarea></div>
+          <div class="field"><label for="x-timeline">Timeline, one event per line: date, what happened</label><textarea id="x-timeline" data-k="context.timeline" class="code" rows="6" data-cite></textarea><p class="hint">Dates such as March 3, 2022 keep their own comma.</p></div>
+          <div class="field"><label for="x-glossary">Terms, one per line: term | what it means</label><textarea id="x-glossary" data-k="context.glossary" class="code" rows="6" data-cite></textarea></div>
+        </div>
+
+        <div class="pane" data-pane="visuals" hidden>
+          <p class="hint">Charts, tables, timelines, key numbers, and images. Give each one a short name, then place it in the research or an appendix with [[name]] on a line of its own. Figures and tables are numbered in the order they appear.</p>
+          <div class="row" id="addVisual"></div>
+          <div id="visList" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+
+        <div class="pane" data-pane="sources" hidden>
+          <p class="hint">Open the list files you saved in the OSINT Citation Generator. Each source gets a short key: write [@key] or [@key, p. 45] in any text. Here you also grade each source, say what it is good for, and choose where it is listed in the source assessment.</p>
+          <div class="row" style="grid-template-columns:auto auto 1fr;align-items:center">
+            <button type="button" class="btn" id="srcOpen">Open an OSINT list file</button>
+            <button type="button" class="btn quiet" id="srcAddTyped">Add a source by hand</button>
+            <span></span>
+          </div>
+          <input type="file" id="srcPick" accept=".json,application/json" multiple hidden>
+          <p class="filemsg" id="srcMsg" role="status"></p>
+          <div class="card" id="typedForm" hidden>
+            <div class="field"><label for="ty-key">Key</label><input type="text" id="ty-key" placeholder="beckley-unrivaled"></div>
+            <div class="field"><label for="ty-full">Full citation, as the first note should read</label><textarea id="ty-full" rows="3" placeholder='Michael Beckley, *Unrivaled* [Monograph] (Cornell University Press: 2018).'></textarea></div>
+            <div class="field"><label for="ty-short">Short form, for later notes</label><input type="text" id="ty-short" placeholder="Beckley, *Unrivaled*."></div>
+            <div class="row" style="grid-template-columns:auto auto 1fr"><button type="button" class="btn small primary" id="tySave">Add source</button><button type="button" class="btn small quiet" id="tyCancel">Cancel</button></div>
+            <p class="hint">Use *asterisks* for italics. A page number in [@key, p. 4] goes before the final period.</p>
+          </div>
+          <div class="srcs" id="srcList"></div>
+          <p class="hint" id="srcEmpty">No sources yet. You can still write notes by hand with ^[note text].</p>
+          <p class="hint">Grades: a letter for the source (A highly reliable to F unknown) and a number for the information (1 confirmed to 6 unknown), as in the OSINT Style Guide. For sources from a list file, the grade is the one in the citation.</p>
+        </div>
+
+        <div class="pane" data-pane="appendix" hidden>
+          <p class="hint">Each # heading starts Appendix A, B, C. ## headings are numbered A.1, A.2. [[rating-key]] adds the full source rating key table.</p>
+          <div class="toolbar" data-for="appendix"></div>
+          <textarea id="t-appendix" data-k="appendix" class="code big" spellcheck="true" data-cite aria-label="Appendix text"></textarea>
+        </div>
+
+        <div class="pane" data-pane="back" hidden>
+          <p class="hint">The last page. Turn it off under Report. Prepared by and for, the marking, the disclaimer, and the logo come from Report and Brand.</p>
+          <div class="field"><label for="k-method">Method</label><textarea id="k-method" data-k="back.method" class="code" rows="4" data-cite placeholder="How the research was done: what was searched, over what period, and what was left out."></textarea></div>
+          <div class="field"><label for="k-dist">Handling and distribution</label><input type="text" id="k-dist" data-k="back.distribution" placeholder="For the editorial team. Do not forward outside the organization."></div>
+          <div class="field"><label for="k-history">Versions, one per line: version | date | change</label><textarea id="k-history" data-k="back.history" class="code" rows="3" placeholder="1.0 | October 16, 2026 | First draft"></textarea></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" aria-label="Pages">
+      <div>
+        <div class="viewbar"><span class="stat" id="viewStats"></span><span class="busy" id="busy" hidden>Laying out pages…</span></div>
+        <ul class="checks checkwrap" id="checks" aria-label="Checks"></ul>
+      </div>
+      <div class="scroller" id="scroller"><div id="pages"></div></div>
+    </section>
+  </div>
+</div>
+<div id="stage" aria-hidden="true"></div>
+
+<script type="text/plain" id="paper-css">/*PAPERCSS*/</script>
+<script id="pagedjs">/*PAGED*/</script>
+<script id="osint">/*OSINT*/</script>
+<script id="core">/*CORE*/</script>
+<script id="ui">/*UI*/</script>
+</body>
+</html>
